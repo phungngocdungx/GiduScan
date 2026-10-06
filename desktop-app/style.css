@@ -1,0 +1,192 @@
+/* ===== Nền ===== */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, Arial, sans-serif;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  position: relative;
+  overflow-x: hidden;
+  color: #1d1d1f;
+}
+
+.background-blur {
+  position: fixed;
+  inset: 0;
+  background:
+    linear-gradient(135deg, #b6d7ff 0%, #e4efff 25%, #f0f4ff 50%, #e8f0ff 75%, #d4e3ff 100%);
+  background-size: 400% 400%;
+  animation: gradientShift 15s ease infinite;
+  z-index: -2;
+}
+
+@keyframes gradientShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* ===== Khung chính ===== */
+.container {
+  width: 100%;
+  max-width: 520px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* ===== Kính trong suốt — Glassmorphism iOS 26 ===== */
+.glass-card,
+.header-card {
+  background: rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  box-shadow:
+    0 8px 32px rgba(31, 38, 135, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  padding: 32px;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.glass-card:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 12px 40px rgba(31, 38, 135, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+.header-card {
+  text-align: center;
+  padding: 28px 32px;
+}
+
+.header-card h1 {
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  color: #0f172a;
+  margin-bottom: 6px;
+}
+
+.subtitle {
+  font-size: 15px;
+  color: #64748b;
+  font-weight: 400;
+}
+
+/* ===== QR Box ===== */
+.qr-section {
+  text-align: center;
+}
+
+.qr-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(255, 255, 255, 0.6);
+  border-radius: 16px;
+  margin-bottom: 16px;
+}
+
+.qr-wrapper img {
+  max-width: 260px;
+  width: 100%;
+  height: auto;
+  border-radius: 12px;
+}
+
+.qr-placeholder {
+  color: #94a3b8;
+  font-size: 15px;
+  padding: 40px 20px;
+}
+
+.link-box {
+  font-family: 'SF Mono', Consolas, monospace;
+  font-size: 13px;
+  background: rgba(17, 24, 39, 0.06);
+  color: #1e40af;
+  padding: 12px 16px;
+  border-radius: 10px;
+  word-break: break-all;
+  border: 1px solid rgba(59, 130, 246, 0.15);
+}
+
+/* ===== Files Section ===== */
+.files-section h2 {
+  font-size: 19px;
+  font-weight: 600;
+  color: #1e293b;
+  margin-bottom: 16px;
+}
+
+.status-badge {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  color: #475569;
+  background: rgba(14, 165, 233, 0.08);
+  padding: 10px 14px;
+  border-radius: 10px;
+  margin-bottom: 18px;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #10b981;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% { opacity: 1; box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); }
+  70% { opacity: 0.6; box-shadow: 0 0 0 8px rgba(16, 185, 129, 0); }
+  100% { opacity: 1; }
+}
+
+.files-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.file-item {
+  background: rgba(16, 185, 129, 0.08);
+  border-left: 3px solid #10b981;
+  padding: 14px 16px;
+  border-radius: 10px;
+  font-size: 14px;
+  line-height: 1.5;
+  animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.file-item strong {
+  color: #065f46;
+  display: block;
+  margin-bottom: 2px;
+}
+
+/* ===== Footer ===== */
+.footer-note {
+  text-align: center;
+  font-size: 12px;
+  color: #94a3b8;
+  margin-top: 4px;
+}

@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GiDu Scan</title>
+  <!-- icon -->
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="background-blur"></div>
+
+  <div class="container">
+    <header class="header-card">
+      <h1>📲 Kết Nối Thiết Bị</h1>
+      <p class="subtitle">Quét mã QR bằng điện thoại để bắt đầu</p>
+    </header>
+
+    <main>
+      <section class="glass-card qr-section">
+        <div id="qr-container" class="qr-wrapper">
+          <div class="qr-placeholder">Đang tạo mã QR...</div>
+        </div>
+        <div id="link" class="link-box"></div>
+      </section>
+
+      <section class="glass-card files-section">
+        <h2>📂 Tài Liệu Nhận Được</h2>
+        <p id="status" class="status-badge">
+          <span class="dot"></span>
+          Đang chờ kết nối...
+        </p>
+        <div id="received-files" class="files-list"></div>
+      </section>
+    </main>
+
+    <footer class="footer-note">
+      Dữ liệu truyền trực tiếp, không lưu trên máy chủ trung gian
+    </footer>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
