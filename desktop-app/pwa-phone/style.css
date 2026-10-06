@@ -1,127 +1,205 @@
+:root {
+  --bg-system: #f2f2f7;
+  --glass-card: rgba(255, 255, 255, 0.78);
+  --glass-border: rgba(255, 255, 255, 0.95);
+  --glass-shadow: 0 10px 30px rgba(0, 0, 0, 0.04), 0 1px 1px rgba(0, 0, 0, 0.03);
+  --text-primary: #1c1c1e;
+  --text-secondary: #8e8e93;
+  --apple-blue: #007aff;
+  --apple-green: #34c759;
+}
+
 * {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
+  -webkit-tap-highlight-color: transparent;
 }
 
 body {
-  font-family: Arial, sans-serif;
-  padding: 20px;
-  max-width: 480px;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", sans-serif;
+  color: var(--text-primary);
+  background-color: var(--bg-system);
+  min-height: 100vh;
+  padding: 16px 16px 36px;
+  max-width: 420px;
   margin: 0 auto;
-  background: #f8f9fa;
+  -webkit-font-smoothing: antialiased;
 }
 
-h1 {
-  font-size: 22px;
-  text-align: center;
+/* Thanh Header trên cùng */
+.nav-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   margin-bottom: 20px;
-  color: #1e293b;
+  padding: 4px 2px;
+}
+
+.nav-title {
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.4px;
+}
+
+/* Nút Cài đặt dạng nhộng kính nhỏ gọn (Capsule Glass) */
+.btn-install {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 7px 14px;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--glass-border);
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--apple-blue);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  cursor: pointer;
+  transition: transform 0.15s ease, background-color 0.2s ease;
+}
+
+.btn-install:active {
+  transform: scale(0.96);
+  background: rgba(255, 255, 255, 0.65);
+}
+
+/* Khối kính trắng bo tròn */
+.glass-panel {
+  background: var(--glass-card);
+  backdrop-filter: blur(30px) saturate(180%);
+  -webkit-backdrop-filter: blur(30px) saturate(180%);
+  border-radius: 26px;
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+  padding: 20px 18px;
+  margin-bottom: 18px;
 }
 
 h3 {
-  font-size: 17px;
-  margin: 12px 0;
-  color: #334155;
-}
-
-h4 {
-  font-size: 15px;
-  margin: 10px 0;
-  color: #475569;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.2px;
+  margin-bottom: 4px;
 }
 
 .hint {
-  font-size: 14px;
-  color: #64748b;
-  margin-bottom: 8px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.4;
+  margin-bottom: 14px;
 }
 
+/* Khung Camera */
 .frame-container {
   position: relative;
   width: 100%;
-  border-radius: 10px;
+  border-radius: 20px;
   overflow: hidden;
+  background: #000;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.06);
 }
 
 video {
   width: 100%;
-  background: #000;
+  height: 270px;
+  object-fit: cover;
   display: block;
 }
 
+/* Khung scan viền xanh thanh mảnh */
 .scan-frame {
   position: absolute;
-  top: 8%;
-  left: 6%;
-  right: 6%;
-  bottom: 12%;
-  border: 2px solid #10b981;
-  border-radius: 4px;
+  top: 10%;
+  left: 8%;
+  right: 8%;
+  bottom: 14%;
+  border: 2px solid var(--apple-green);
+  border-radius: 16px;
   pointer-events: none;
+  box-shadow: 0 0 16px rgba(52, 199, 89, 0.25);
 }
 
-button {
+/* Nút hành động chính chuẩn iOS */
+button.btn-primary, button.btn-secondary {
   width: 100%;
   padding: 14px;
+  border-radius: 16px;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.2px;
   border: none;
-  border-radius: 10px;
-  font-size: 16px;
-  font-weight: bold;
   cursor: pointer;
-  transition: opacity 0.2s;
+  transition: transform 0.15s ease, opacity 0.2s ease;
+}
+
+button:active {
+  transform: scale(0.98);
 }
 
 button:disabled {
-  opacity: 0.5;
+  opacity: 0.4;
   cursor: not-allowed;
+  transform: none;
 }
 
 .btn-primary {
-  background: #10b981;
-  color: white;
-  margin: 12px 0 8px;
+  background: var(--apple-green);
+  color: #fff;
+  margin-top: 14px;
+  box-shadow: 0 4px 14px rgba(52, 199, 89, 0.25);
 }
 
 .btn-secondary {
-  background: #2563eb;
-  color: white;
+  background: var(--apple-blue);
+  color: #fff;
   margin-top: 16px;
+  box-shadow: 0 4px 14px rgba(0, 122, 255, 0.25);
 }
 
+/* Trạng thái */
 .status-info {
-  margin: 8px 0;
-  padding: 6px;
-  color: #10b981;
+  margin-top: 10px;
+  font-size: 13px;
   font-weight: 500;
-  font-size: 14px;
+  color: var(--apple-green);
+  text-align: center;
+}
+
+.status-error {
+  margin-top: 10px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #ff3b30;
+  text-align: center;
 }
 
 .status-final {
   margin-top: 12px;
-  font-weight: bold;
-  color: #2563eb;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--apple-blue);
+  text-align: center;
 }
 
-#pages-list {
-  margin-top: 20px;
-}
-
+/* Danh sách trang tài liệu */
 #thumbnails {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
-  margin-top: 10px;
+  margin-top: 12px;
 }
 
 .thumbnail {
   position: relative;
-  width: 80px;
-  height: 100px;
-  border: 2px solid #ddd;
-  border-radius: 6px;
+  width: 76px;
+  height: 96px;
+  border-radius: 12px;
   overflow: hidden;
-  background: white;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
 }
 
 .thumbnail img {
@@ -132,14 +210,14 @@ button:disabled {
 
 .del-page {
   position: absolute;
-  top: 2px;
-  right: 2px;
-  width: 24px;
-  height: 24px;
-  padding: 0;
-  background: rgba(0,0,0,0.6);
-  color: white;
-  font-size: 16px;
-  line-height: 1;
+  top: 3px;
+  right: 3px;
+  width: 20px;
+  height: 20px;
   border-radius: 50%;
+  background: rgba(0, 0, 0, 0.5);
+  color: #fff;
+  border: none;
+  font-size: 12px;
+  line-height: 1;
 }

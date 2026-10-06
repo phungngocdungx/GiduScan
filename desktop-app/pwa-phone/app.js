@@ -232,5 +232,14 @@ document.getElementById('pdf-btn').addEventListener('click', async () => {
   }, 4000);
 });
 
+// Đăng ký Service Worker để đủ điều kiện cài đặt PWA
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js')
+      .then(reg => console.log('✅ Service Worker đã đăng ký:', reg.scope))
+      .catch(err => console.error('❌ Lỗi Service Worker:', err));
+  });
+}
+
 // Bắt đầu
 startQRScan();

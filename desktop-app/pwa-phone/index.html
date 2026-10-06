@@ -2,26 +2,40 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Quét Tài Liệu</title>
+  
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#f2f2f7">
+
   <link rel="stylesheet" href="style.css">
   <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body>
-  <h1>📱 Quét & Gửi Tài Liệu</h1>
+  <!-- Header với thanh tiêu đề và nút cài đặt góc phải -->
+  <header class="nav-header">
+    <div class="nav-title">Quét & Gửi</div>
+    <button id="pwa-install-btn" class="btn-install" style="display: none;">
+      ⬇️ Cài đặt
+    </button>
+  </header>
 
   <!-- Bước 1: Quét QR kết nối -->
-  <div id="connect-step">
+  <div id="connect-step" class="glass-panel">
     <h3>1. Quét mã QR để kết nối</h3>
-    <video id="qr-video" autoplay playsinline></video>
-    <p id="status">⏳ Đang mở camera...</p>
+    <p class="hint">Hướng camera về phía mã QR trên màn hình máy tính</p>
+    
+    <div class="frame-container">
+      <video id="qr-video" autoplay playsinline></video>
+    </div>
+    <p id="status" class="status-error">⏳ Đang khởi động camera...</p>
   </div>
 
   <!-- Bước 2: Quét tài liệu -->
-  <div id="scan-step" style="display: none;">
+  <div id="scan-step" class="glass-panel" style="display: none;">
     <h3>2. Quét tài liệu</h3>
-    <p class="hint">Đặt tài liệu vào khung xanh → chụp → tự cắt & làm rõ</p>
+    <p class="hint">Đặt tài liệu vào khung xanh để tự động xử lý</p>
 
     <div class="frame-container">
       <video id="doc-video" autoplay playsinline></video>
@@ -29,14 +43,14 @@
     </div>
     <p id="scan-status" class="status-info"></p>
 
-    <button id="capture-btn" class="btn-primary">📷 Chụp trang</button>
+    <button id="capture-btn" class="btn-primary">Chụp trang</button>
 
-    <div id="pages-list">
-      <h4>📄 Đã quét: <span id="page-count">0</span> trang</h4>
+    <div id="pages-list" style="margin-top: 18px;">
+      <h4 style="font-size: 14px; color: #8e8e93;">Đã quét: <span id="page-count">0</span> trang</h4>
       <div id="thumbnails"></div>
     </div>
 
-    <button id="pdf-btn" disabled class="btn-secondary">📄 Tạo & Gửi PDF</button>
+    <button id="pdf-btn" disabled class="btn-secondary">Tạo & Gửi PDF</button>
     <p id="final-status" class="status-final"></p>
   </div>
 
