@@ -9,25 +9,34 @@ const path = require('path');
 const app = express();
 const PORT = 3000;
 
-// === Lấy IP cục bộ — Giữ nguyên logic của bạn ===
+// === Lấy đúng IP của mạng Hotspot đang hoạt động ===
 const getLocalIP = () => {
   const ifaces = os.networkInterfaces();
-  for (const iface of Object.values(ifaces)) {
-    for (const alias of iface) {
-      if (alias.family === 'IPv4' && !alias.internal) return alias.address;
+  const candidates = [];
+
+  for (const [name, netList] of Object.entries(ifaces)) {
+    for (const net of netList) {
+      // Chỉ lấy IPv4 thật, không phải loopback và không phải IP tự cấp 169.254
+      if (net.family === 'IPv4' && !net.internal && !net.address.startsWith('169.254')) {
+        candidates.push({ name, address: net.address });
+      }
     }
   }
-  return '127.0.0.1';
+
+  // 1. Nếu có IP khớp với mạng 10.37.91.x (mạng Hotspot thực tế từ điện thoại của bạn), ưu tiên lấy luôn
+  const hotspotIP = candidates.find(c => c.address.startsWith('10.37.91.'));
+  if (hotspotIP) return hotspotIP.address;
+
+  // 2. Ưu tiên card Wi-Fi khác dải 10.1.38 cũ
+  const wifiIP = candidates.find(c => /wi-fi|wlan|wireless/i.test(c.name) && !c.address.startsWith('10.1.38.'));
+  if (wifiIP) return wifiIP.address;
+
+  return candidates[0] ? candidates[0].address : '127.0.0.1';
 };
-const localIP = getLocalIP();
 
-// === ✅ Tìm đường dẫn ĐÚNG khi chạy từ NGUỒN hoặc từ EXE ===
 const isPackaged = typeof process.pkg !== 'undefined';
-const APP_ROOT = isPackaged
-  ? path.dirname(process.execPath)  // Thư mục chứa file .exe
-  : __dirname;                      // Thư mục chứa server.js khi chạy nguồn
+const APP_ROOT = isPackaged ? path.dirname(process.execPath) : __dirname;
 
-// === Đọc chứng chỉ HTTPS ===
 const certPath = (name) => path.join(APP_ROOT, name);
 
 let options;
@@ -37,86 +46,61 @@ try {
     cert: fs.readFileSync(certPath('cert.pem'))
   };
 } catch (err) {
-  console.error('❌ Không tìm thấy file key.pem hoặc cert.pem!');
-  console.error('👉 Đặt 2 file này cùng thư mục với chương trình .exe');
+  console.error('❌ Không tìm thấy file cert/key!');
   process.exit(1);
 }
 
-// === Tạo server ===
-const server = https.createServer(options, app);
-const wss = new WebSocket.Server({ server });
-
-// === Phục vụ file — Đúng đường dẫn với EXE ===
-app.use(express.static(APP_ROOT));
-app.use('/pwa', express.static(path.join(APP_ROOT, 'pwa-phone')));
-
-// === Chuyển tiếp dữ liệu WebSocket — Giữ nguyên 100% logic của bạn ===
-wss.on('connection', (ws) => {
-  console.log('✅ Điện thoại đã kết nối! Tổng số kết nối:', wss.clients.size);
-
-  ws.on('message', function (data) {
-    const text = data.toString('utf8');
-    console.log('📩 Nhận được từ điện thoại, độ dài:', text.length, 'ký tự');
-
-    wss.clients.forEach(function (client) {
-      if (client !== ws && client.readyState === WebSocket.OPEN) {
-        console.log('📤 Chuyển tiếp đến máy tính...');
-        client.send(text);
-      }
-    });
-  });
-
-  ws.on('close', () => console.log('❌ Một thiết bị ngắt kết nối'));
-  ws.onerror = (err) => console.error('⚠️ Lỗi WebSocket:', err);
-});
-
-// === Tạo QR ===
-const pwaUrl = `https://${localIP}:${PORT}/pwa`;
-let qrCodeDataUrl = '';
-
-qrcode.toDataURL(pwaUrl).then(qrDataUrl => {
-  qrCodeDataUrl = qrDataUrl;
-  console.log('========================================');
-  console.log(`✅ Server chạy: https://${localIP}:${PORT}`);
-  console.log(`📱 PWA: ${pwaUrl}`);
-  console.log('========================================');
-  console.log('👉 Mở link trên hoặc quét mã QR trên trình duyệt máy tính');
-});
-
-app.get('/qrcode-data', (req, res) => {
-  res.json({
-    qrCode: qrCodeDataUrl,
-    url: pwaUrl,
-    ip: localIP,
-    port: PORT
-  });
-});
-
-// === Khởi động ===
-server.listen(PORT, localIP, () => {
-  // Thông báo đã in ở trên khi QR tạo xong
-});
-
-// === Bắt lỗi cổng bị chiếm ===
-server.on('error', (err) => {
-  if (err.code === 'EADDRINUSE') {
-    console.error(`❌ Cổng ${PORT} đã được sử dụng!`);
-    console.error('👉 Đóng chương trình khác đang dùng cổng 3000 rồi thử lại');
-  } else {
-    console.error('❌ Lỗi khởi động server:', err.message);
-  }
-  process.exit(1);
-});
-
-// Cho phép truy cập từ localhost và ứng dụng
+// === Cấu hình CORS ===
 app.use((req, res, next) => {
   res.header('Access-Control-Allow-Origin', '*');
   next();
 });
 
+// === Phục vụ file tĩnh ===
+app.use(express.static(APP_ROOT));
+app.use('/pwa', express.static(path.join(APP_ROOT, 'pwa-phone')));
+
+// === API QR code ĐỘNG: Tạo lại mỗi lần app mở hoặc refresh ===
+app.get('/qrcode-data', async (req, res) => {
+  const currentIP = getLocalIP();
+  const currentUrl = `https://${currentIP}:${PORT}/pwa`;
+  try {
+    const qrDataUrl = await qrcode.toDataURL(currentUrl);
+    console.log(`📡 Client lấy QR thành công: ${currentUrl}`);
+    res.json({
+      qrCode: qrDataUrl,
+      url: currentUrl,
+      ip: currentIP,
+      port: PORT
+    });
+  } catch (err) {
+    res.status(500).json({ error: 'Lỗi tạo QR' });
+  }
+});
+
+// === Tạo server HTTPS & WebSocket ===
+const server = https.createServer(options, app);
+const wss = new WebSocket.Server({ server });
+
+wss.on('connection', (ws) => {
+  console.log('✅ Thiết bị kết nối WebSocket!');
+  ws.on('message', function (data) {
+    const text = data.toString('utf8');
+    wss.clients.forEach(function (client) {
+      if (client !== ws && client.readyState === WebSocket.OPEN) {
+        client.send(text);
+      }
+    });
+  });
+  ws.on('close', () => console.log('❌ Một thiết bị ngắt kết nối'));
+  ws.onerror = (err) => console.error('⚠️ Lỗi WebSocket:', err);
+});
+
+// Lắng nghe trên mọi card mạng (0.0.0.0)
 server.listen(PORT, '0.0.0.0', () => {
+  const ip = getLocalIP();
   console.log('========================================');
-  console.log(`✅ Server chạy tại: https://10.37.91.225:${PORT}`);
-  console.log(`✅ Cũng truy cập: https://127.0.0.1:${PORT}`);
+  console.log(`✅ Server chạy: https://${ip}:${PORT}`);
+  console.log(`📱 Link PWA:    https://${ip}:${PORT}/pwa`);
   console.log('========================================');
 });
