@@ -232,14 +232,165 @@ document.getElementById('pdf-btn').addEventListener('click', async () => {
   }, 4000);
 });
 
-// Đăng ký Service Worker để đủ điều kiện cài đặt PWA
+// Đăng ký Service Worker
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('sw.js')
+    navigator.serviceWorker.register('./sw.js')
+      .then((reg) => {
+        console.log('✅ Service Worker Scope:', reg.scope);
+      })
+      .catch((err) => {
+        console.error('❌ Service Worker thất bại:', err);
+      });
+  });
+}
+
+// ==================== Cấu hình PWA & Nút cài đặt ====================
+let deferredPrompt = null;
+const installBtn = document.getElementById('pwa-install-btn');
+
+// 1. Lắng nghe sự kiện trình duyệt cho phép cài đặt
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  if (installBtn) {
+    installBtn.style.display = 'inline-flex'; // Hiện nút cài đặt
+  }
+});
+
+// 2. Bắt sự kiện bấm nút
+if (installBtn) {
+  installBtn.addEventListener('click', async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    console.log('Người dùng chọn:', outcome);
+    deferredPrompt = null;
+    installBtn.style.display = 'none';
+  });
+}
+
+// 3. Ẩn nút sau khi đã cài
+window.addEventListener('appinstalled', () => {
+  console.log('✅ PWA đã được cài đặt thành công!');
+  if (installBtn) installBtn.style.display = 'none';
+});
+
+// 4. Đăng ký Service Worker với scope toàn trang
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js', { scope: '/' })
       .then(reg => console.log('✅ Service Worker đã đăng ký:', reg.scope))
       .catch(err => console.error('❌ Lỗi Service Worker:', err));
   });
 }
+
+// ==================== BỘ CHẨN ĐOÁN PWA TRỰC TIẾP TRÊN GIAO DIỆN ====================
+(function runPWADiagnostics() {
+  const logContainer = document.getElementById('diag-logs');
+  const summaryEl = document.getElementById('diag-summary');
+  if (!logContainer) return;
+
+  const logs = [];
+  function renderLogs() {
+    logContainer.innerHTML = logs.map(item => `<div>${item}</div>`).join('');
+  }
+
+  // 1. Kiểm tra môi trường HTTPS / Localhost
+  const isSecure = window.isSecureContext;
+  if (isSecure) {
+    logs.push('✅ Giao thức: HTTPS / Secure Context hợp lệ');
+  } else {
+    logs.push('❌ Giao thức: KHÔNG an toàn (Cần HTTPS hoặc localhost)');
+  }
+
+  // 2. Kiểm tra Service Worker hỗ trợ & trạng thái đăng ký
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.getRegistration().then(reg => {
+      if (reg) {
+        logs.push(`✅ Service Worker: Đã kích hoạt (Scope: ${reg.scope})`);
+      } else {
+        logs.push('⚠️ Service Worker: Đang cài đặt hoặc chưa active');
+      }
+      renderLogs();
+    }).catch(err => {
+      logs.push(`❌ Service Worker lỗi: ${err.message}`);
+      renderLogs();
+    });
+  } else {
+    logs.push('❌ Service Worker: Trình duyệt không hỗ trợ');
+  }
+
+  // 3. Kiểm tra file Manifest có tải được không
+  const manifestLink = document.querySelector('link[rel="manifest"]');
+  if (!manifestLink) {
+    logs.push('❌ Thẻ link manifest: Chưa khai báo trong <head>');
+  } else {
+    fetch(manifestLink.href)
+      .then(res => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.json();
+      })
+      .then(data => {
+        logs.push(`✅ File Manifest: Tải thành công ("${data.name || data.short_name}")`);
+        
+        // Kiểm tra xem file icon có tồn tại không
+        if (data.icons && data.icons.length > 0) {
+          const testIconSrc = data.icons[0].src;
+          const img = new Image();
+          img.onload = () => {
+            logs.push(`✅ Ảnh Icon (${data.icons[0].src}): Kích thước ${img.width}x${img.height}px`);
+            renderLogs();
+          };
+          img.onerror = () => {
+            logs.push(`❌ Ảnh Icon (${data.icons[0].src}): Lỗi 404 không tìm thấy file`);
+            renderLogs();
+          };
+          img.src = testIconSrc;
+        } else {
+          logs.push('❌ Manifest: Không có danh sách icons');
+        }
+        renderLogs();
+      })
+      .catch(err => {
+        logs.push(`❌ File Manifest lỗi: ${err.message}`);
+        renderLogs();
+      });
+  }
+
+  // 4. Lắng nghe sự kiện beforeinstallprompt của Chrome
+  let promptFired = false;
+  window.addEventListener('beforeinstallprompt', (e) => {
+    promptFired = true;
+    e.preventDefault();
+    window.deferredPrompt = e;
+    
+    // Hiện nút cài đặt trên giao diện
+    const installBtn = document.getElementById('pwa-install-btn');
+    if (installBtn) installBtn.style.display = 'inline-flex';
+
+    if (summaryEl) {
+      summaryEl.textContent = 'ĐỦ ĐIỀU KIỆN CÀI ✅';
+      summaryEl.style.color = '#34c759';
+    }
+    logs.push('🎉 Trình duyệt ĐÃ CẤP QUYỀN CÀI ĐẶT (Prompt sẵn sàng)');
+    renderLogs();
+  });
+
+  // Sau 3 giây nếu Chrome vẫn chưa bắn sự kiện beforeinstallprompt
+  setTimeout(() => {
+    if (!promptFired) {
+      if (summaryEl) {
+        summaryEl.textContent = 'CHƯA ĐỦ ĐIỀU KIỆN ⚠️';
+        summaryEl.style.color = '#ff9500';
+      }
+      logs.push('⚠️ beforeinstallprompt: Chưa phát (Chrome đang chặn WebAPK hoặc thiếu icon)');
+      renderLogs();
+    }
+  }, 3500);
+
+  renderLogs();
+})();
 
 // Bắt đầu
 startQRScan();
