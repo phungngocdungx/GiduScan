@@ -16,20 +16,15 @@ const getLocalIP = () => {
 
   for (const [name, netList] of Object.entries(ifaces)) {
     for (const net of netList) {
-      // Chỉ lấy IPv4 thật, không phải loopback và không phải IP tự cấp 169.254
       if (net.family === 'IPv4' && !net.internal && !net.address.startsWith('169.254')) {
         candidates.push({ name, address: net.address });
       }
     }
   }
 
-  // 1. Nếu có IP khớp với mạng 10.37.91.x (mạng Hotspot thực tế từ điện thoại của bạn), ưu tiên lấy luôn
-  const hotspotIP = candidates.find(c => c.address.startsWith('10.37.91.'));
-  if (hotspotIP) return hotspotIP.address;
-
-  // 2. Ưu tiên card Wi-Fi khác dải 10.1.38 cũ
-  const wifiIP = candidates.find(c => /wi-fi|wlan|wireless/i.test(c.name) && !c.address.startsWith('10.1.38.'));
-  if (wifiIP) return wifiIP.address;
+  // Ưu tiên card Wi-Fi hoặc Ethernet đang kết nối
+  const activeNet = candidates.find(c => /wi-fi|wlan|wireless|ethernet|lan/i.test(c.name));
+  if (activeNet) return activeNet.address;
 
   return candidates[0] ? candidates[0].address : '127.0.0.1';
 };

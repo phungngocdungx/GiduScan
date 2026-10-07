@@ -38,17 +38,17 @@ function waitForPort(port, host = '127.0.0.1', timeoutMs = 15000) {
 
 // === Khởi động server với đường dẫn đúng ===
 function startServer() {
-  console.log('🚀 Dang khoi dong server...');
-  
-  // Truyền đường dẫn gốc vào server qua biến môi trường
-  const env = { ...process.env, APP_ROOT: RESOURCES_PATH };
-  
-  serverProcess = spawn('node', ['server.js'], {
-    cwd: RESOURCES_PATH,
-    env: env,
-    stdio: 'inherit',
-    shell: true
-  });
+    console.log('🚀 Dang khoi dong server...');
+
+    // Truyền đường dẫn gốc vào server qua biến môi trường
+    const env = { ...process.env, APP_ROOT: RESOURCES_PATH };
+
+    serverProcess = spawn('node', ['server.js'], {
+        cwd: RESOURCES_PATH,
+        env: env,
+        stdio: 'inherit',
+        shell: true
+    });
 }
 
 async function createWindow() {
@@ -69,7 +69,7 @@ async function createWindow() {
         console.log('✅ Server sẵn sàng! Đang tải giao diện...');
 
         // Tải bằng IP nội bộ (không dùng 127.0.0.1)
-        await mainWindow.loadURL(`https://10.37.91.225:${PORT}`, {
+        await mainWindow.loadURL(`https://localhost:${PORT}`, {
             userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
         });
 

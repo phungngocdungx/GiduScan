@@ -1,11 +1,11 @@
 {
   "name": "GiduScan",
-  "version": "1.0.0",
+  "version": "1.0.3",
   "description": "GiDu Scan",
   "main": "main.js",
   "scripts": {
     "start": "electron .",
-    "build": "electron-builder --win"
+    "build": "electron-builder --publish always"
   },
   "dependencies": {
     "express": "^4.18.2",
@@ -32,6 +32,12 @@
       {
         "from": "pwa-phone",
         "to": "pwa-phone"
+      }
+    ],
+    "publish": [
+      {
+        "provider": "generic",
+        "url": "https://giduchat.up.railway.app/update/"
       }
     ],
     "win": {
