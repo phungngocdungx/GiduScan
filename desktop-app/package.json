@@ -8,9 +8,10 @@
     "build": "electron-builder --publish always"
   },
   "dependencies": {
+    "electron-updater": "^6.8.9",
     "express": "^4.18.2",
-    "ws": "^8.14.0",
-    "qrcode": "^1.5.3"
+    "qrcode": "^1.5.3",
+    "ws": "^8.14.0"
   },
   "devDependencies": {
     "electron": "^31.7.0",

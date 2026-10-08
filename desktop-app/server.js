@@ -91,6 +91,23 @@ wss.on('connection', (ws) => {
   ws.onerror = (err) => console.error('⚠️ Lỗi WebSocket:', err);
 });
 
+// Biến lưu trạng thái update dùng chung
+global.updateStatus = { status: 'idle', message: 'Hệ thống đang hoạt động', version: '' };
+
+app.get('/api/check-update', (req, res) => {
+  if (global.triggerCheckUpdate) {
+    global.triggerCheckUpdate();
+  }
+  res.json(global.updateStatus);
+});
+
+app.get('/api/install-update', (req, res) => {
+  if (global.triggerInstallUpdate) {
+    global.triggerInstallUpdate();
+  }
+  res.json({ success: true });
+});
+
 // Lắng nghe trên mọi card mạng (0.0.0.0)
 server.listen(PORT, '0.0.0.0', () => {
   const ip = getLocalIP();

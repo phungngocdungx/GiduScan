@@ -190,3 +190,60 @@ body {
   color: #94a3b8;
   margin-top: 4px;
 }
+
+/* Nút Settings và Badge chấm đỏ */
+.settings-btn {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  background: transparent;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 50%;
+  transition: background 0.2s;
+}
+.settings-btn:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+.badge-dot {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 9px;
+  height: 9px;
+  background: #ef4444;
+  border-radius: 50%;
+  border: 2px solid #fff;
+}
+
+/* Modal */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+}
+.modal-content {
+  width: 90%;
+  max-width: 380px;
+  padding: 24px;
+}
+.modal-btn {
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  background: #fff;
+  cursor: pointer;
+  font-size: 13px;
+}
+.modal-btn.btn-primary {
+  background: #2563eb;
+  color: white;
+  border: none;
+}
+.hidden { display: none !important; }

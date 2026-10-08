@@ -2,6 +2,8 @@ const { app, BrowserWindow, session } = require('electron');
 const path = require('path');
 const { spawn } = require('child_process');
 const net = require('net');
+const { autoUpdater } = require('electron-updater');
+const { ipcMain } = require('electron');
 
 // === Đường dẫn tài nguyên khi đóng gói ===
 const RESOURCES_PATH = app.isPackaged
@@ -15,8 +17,6 @@ app.commandLine.appendSwitch('allow-insecure-localhost', 'true');
 let mainWindow;
 let serverProcess;
 const PORT = 3000;
-
-
 
 function waitForPort(port, host = '127.0.0.1', timeoutMs = 15000) {
     return new Promise((resolve, reject) => {
@@ -38,16 +38,28 @@ function waitForPort(port, host = '127.0.0.1', timeoutMs = 15000) {
 
 // === Khởi động server với đường dẫn đúng ===
 function startServer() {
-    console.log('🚀 Dang khoi dong server...');
+    if (serverProcess) return; // Tránh chạy 2 lần gây crash
+    console.log('🚀 Đang khởi động server...');
 
-    // Truyền đường dẫn gốc vào server qua biến môi trường
     const env = { ...process.env, APP_ROOT: RESOURCES_PATH };
+    
+    // Khi đóng gói dùng process.execPath với electron_run_as_node, khi dev dùng trực tiếp 'node'
+    if (app.isPackaged) {
+        serverProcess = spawn(process.execPath, [path.join(RESOURCES_PATH, 'server.js')], {
+            cwd: RESOURCES_PATH,
+            env: { ...env, ELECTRON_RUN_AS_NODE: '1' },
+            stdio: 'inherit'
+        });
+    } else {
+        serverProcess = spawn('node', [path.join(RESOURCES_PATH, 'server.js')], {
+            cwd: RESOURCES_PATH,
+            env: env,
+            stdio: 'inherit'
+        });
+    }
 
-    serverProcess = spawn('node', ['server.js'], {
-        cwd: RESOURCES_PATH,
-        env: env,
-        stdio: 'inherit',
-        shell: true
+    serverProcess.on('error', (err) => {
+        console.error('❌ Lỗi tiến trình server:', err);
     });
 }
 
@@ -59,7 +71,8 @@ async function createWindow() {
         backgroundColor: '#f0f4ff',
         webPreferences: {
             nodeIntegration: false,
-            contextIsolation: true
+            contextIsolation: true,
+            preload: path.join(__dirname, 'preload.js')
         },
         show: false
     });
@@ -101,4 +114,69 @@ app.whenReady().then(() => {
 app.on('window-all-closed', () => {
     if (serverProcess) serverProcess.kill();
     if (process.platform !== 'darwin') app.quit();
+});
+
+autoUpdater.autoDownload = true; // Tự tải ngầm khi có bản mới
+
+function initAutoUpdater() {
+  global.triggerCheckUpdate = () => {
+    if (app.isPackaged) autoUpdater.checkForUpdates();
+  };
+
+  global.triggerInstallUpdate = () => {
+    autoUpdater.quitAndInstall();
+  };
+
+  autoUpdater.on('checking-for-update', () => {
+    global.updateStatus = { status: 'checking', message: 'Đang kiểm tra cập nhật...' };
+  });
+
+  autoUpdater.on('update-available', (info) => {
+    global.updateStatus = { 
+      status: 'downloading', 
+      message: `Phát hiện bản mới v${info.version}! Đang tự tải ngầm...`,
+      version: info.version 
+    };
+  });
+
+  autoUpdater.on('update-not-available', () => {
+    global.updateStatus = { status: 'latest', message: 'Ứng dụng đang ở bản mới nhất' };
+  });
+
+  autoUpdater.on('update-downloaded', (info) => {
+    global.updateStatus = { 
+      status: 'ready', 
+      message: `Bản v${info.version} đã tải xong! Bấm để cập nhật.`,
+      version: info.version 
+    };
+  });
+
+  autoUpdater.on('error', (err) => {
+    global.updateStatus = { status: 'error', message: 'Lỗi kiểm tra cập nhật: ' + err.message };
+  });
+
+  // MỞ APP TỰ CHECK LUÔN
+  if (app.isPackaged) {
+    autoUpdater.checkForUpdates();
+  }
+}
+
+ipcMain.handle('check-for-update', async () => {
+  if (!app.isPackaged) {
+    return {
+      status: 'dev',
+      message: 'Đang ở môi trường dev (chưa đóng gói), không thể kiểm tra cập nhật.'
+    };
+  }
+
+  try {
+    await autoUpdater.checkForUpdates();
+    return { status: 'checking', message: 'Đang tìm kiếm bản cập nhật...' };
+  } catch (err) {
+    return { status: 'error', message: 'Lỗi kiểm tra cập nhật: ' + err.message };
+  }
+});
+
+ipcMain.handle('install-update', () => {
+  autoUpdater.quitAndInstall();
 });
