@@ -1,0 +1,58 @@
+name: GiDuView macOS Intel release
+
+on:
+  push:
+    tags:
+      - "giduview-v*.*.*"
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: macos-15
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+
+      - name: Test Swift package
+        working-directory: GiDuViewer
+        run: swift test --parallel
+
+      - name: Build and verify Intel app
+        working-directory: GiDuViewer
+        env:
+          MACVIEWER_ARCH: x86_64
+          MACVIEWER_APP_NAME: GiDuView
+          MACVIEWER_SIGNING_IDENTITY: "-"
+        run: |
+          version="${GITHUB_REF_NAME#giduview-v}"
+          if [[ "$version" == "$GITHUB_REF_NAME" ]]; then
+            echo "::error::Unexpected release tag: $GITHUB_REF_NAME"
+            exit 1
+          fi
+          echo "MACVIEWER_VERSION=$version" >> "$GITHUB_ENV"
+          scripts/package_app.sh release
+          for executable in MacViewer macviewer-mcp; do
+            archs="$(lipo -archs "dist/GiDuView.app/Contents/MacOS/$executable")"
+            if [[ "$archs" != "x86_64" ]]; then
+              echo "::error::$executable has unexpected architectures: $archs"
+              exit 1
+            fi
+          done
+          mkdir -p ../release
+          ditto -c -k --sequesterRsrc --keepParent dist/GiDuView.app ../release/GiDuView-x86_64.zip
+
+      - name: Publish release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: GiDuView ${{ env.MACVIEWER_VERSION }} (macOS Intel)
+          body: |
+            GiDuView for Intel Macs (`x86_64`), built from this repository's `GiDuViewer` source.
+            Requires macOS 12 or later. This ad-hoc-signed build may require opening with Control-click and choosing Open.
+          files: release/GiDuView-x86_64.zip
