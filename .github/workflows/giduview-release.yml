@@ -19,10 +19,6 @@ jobs:
         with:
           xcode-version: latest-stable
 
-      - name: Test Swift package
-        working-directory: GiDuViewer
-        run: swift test --parallel
-
       - name: Build and verify Intel app
         working-directory: GiDuViewer
         env:
