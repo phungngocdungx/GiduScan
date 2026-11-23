@@ -32,7 +32,7 @@ jobs:
             exit 1
           fi
           echo "MACVIEWER_VERSION=$version" >> "$GITHUB_ENV"
-          scripts/package_app.sh release
+          zsh scripts/package_app.sh release
           for executable in MacViewer macviewer-mcp; do
             archs="$(lipo -archs "dist/GiDuView.app/Contents/MacOS/$executable")"
             if [[ "$archs" != "x86_64" ]]; then
